@@ -184,12 +184,103 @@ function rebuildInputs() {
 }
 
 // =============================================================================
-// LOAD PARAMETERS FROM JSON FILE
+// LOAD PARAMETERS FROM JSON FILE / PRESET
 // =============================================================================
+
+// Shared: populate UI from a parsed data object
+function applyParamData(data, label) {
+  const required = ['Nx','Ny','dx','dy','T','delta'];
+  for (const key of required) {
+    if (typeof data[key] !== 'number') {
+      setStatus(`Error: missing or invalid field "${key}" in ${label}.`, 'error');
+      return;
+    }
+  }
+  $('param-Nx').value    = data.Nx;
+  $('param-Ny').value    = data.Ny;
+  $('param-dx').value    = data.dx;
+  $('param-dy').value    = data.dy;
+  $('param-T').value     = data.T;
+  $('param-delta').value = data.delta;
+
+  rebuildInputs();
+
+  if (Array.isArray(data.occupation)) {
+    const cells = $('occ-grid').querySelectorAll('.occ-cell');
+    cells.forEach(cell => {
+      const col = parseInt(cell.dataset.x) - 1;
+      const row = data.Ny - parseInt(cell.dataset.y);
+      const rowArr = data.occupation[row];
+      if (Array.isArray(rowArr) && rowArr[col] === 1) cell.classList.add('filled');
+      else cell.classList.remove('filled');
+    });
+  }
+
+  if (Array.isArray(data.motion)) {
+    const rows = $('motion-matrix').tBodies[0].rows;
+    for (let t = 0; t < rows.length; t++) {
+      const rowData = data.motion[t];
+      if (!Array.isArray(rowData)) continue;
+      const inputs = rows[t].querySelectorAll('input');
+      for (let k = 0; k < inputs.length && k < rowData.length; k++) inputs[k].value = rowData[k];
+    }
+  }
+
+  setStatus(`Loaded "${label}". Adjust if needed, then click Initialize.`, 'info');
+}
+
+const PRESETS = {
+  'surface-code-X': {
+    _label: 'Surface Code X Stabilizer',
+    Nx: 10, Ny: 5, dx: 4, dy: 2, T: 5, delta: 0.2,
+    occupation: [
+      [0,0,0,0,0,0,0,0,0,1],
+      [0,1,1,1,1,0,1,0,1,0],
+      [0,1,1,1,0,1,0,1,0,1],
+      [0,1,1,1,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0,0]
+    ],
+    motion: [
+      [5,6,7,8,3,4],
+      [1,2,3,4,3,4],
+      [2,3,4,5,3,4],
+      [1,2,3,4,2,3],
+      [2,3,4,5,2,3],
+      [5,6,7,8,3,4]
+    ]
+  },
+  'surface-code-Z': {
+    _label: 'Surface Code Z Stabilizer',
+    Nx: 10, Ny: 5, dx: 2, dy: 4, T: 5, delta: 0.2,
+    occupation: [
+      [0,0,0,0,0,0,0,0,0,1],
+      [0,1,1,1,1,0,1,0,1,0],
+      [0,1,1,1,0,1,0,1,0,1],
+      [0,1,1,1,0,0,0,0,1,0],
+      [0,0,0,0,0,0,0,0,0,0]
+    ],
+    motion: [
+      [9,10,2,3,4,5],
+      [2,3,2,3,4,5],
+      [2,3,1,2,3,4],
+      [3,4,2,3,4,5],
+      [3,4,1,2,3,4],
+      [9,10,2,3,4,5]
+    ]
+  }
+};
+
+function loadPreset(sel) {
+  const key = sel.value;
+  sel.value = ''; // reset to placeholder
+  if (!key || !PRESETS[key]) return;
+  applyParamData(PRESETS[key], PRESETS[key]._label);
+}
+
 function loadFromFile(input) {
   const file = input.files[0];
   if (!file) return;
-  input.value = ''; // reset so same file can be re-loaded
+  input.value = '';
   const reader = new FileReader();
   reader.onload = function(e) {
     let data;
@@ -199,55 +290,7 @@ function loadFromFile(input) {
       setStatus('Error: could not parse JSON file — ' + err.message, 'error');
       return;
     }
-    // Validate required numeric fields
-    const required = ['Nx','Ny','dx','dy','T','delta'];
-    for (const key of required) {
-      if (typeof data[key] !== 'number') {
-        setStatus(`Error: missing or invalid field "${key}" in file.`, 'error');
-        return;
-      }
-    }
-    // Set scalar params
-    $('param-Nx').value    = data.Nx;
-    $('param-Ny').value    = data.Ny;
-    $('param-dx').value    = data.dx;
-    $('param-dy').value    = data.dy;
-    $('param-T').value     = data.T;
-    $('param-delta').value = data.delta;
-
-    // Rebuild grid and matrix with new dimensions
-    rebuildInputs();
-
-    // Fill occupation grid if provided
-    if (Array.isArray(data.occupation)) {
-      const cells = $('occ-grid').querySelectorAll('.occ-cell');
-      // data.occupation[row][col], row 0 = top (y=Ny)
-      cells.forEach(cell => {
-        const col = parseInt(cell.dataset.x) - 1; // 0-indexed
-        const row = data.Ny - parseInt(cell.dataset.y); // 0-indexed from top
-        const rowArr = data.occupation[row];
-        if (Array.isArray(rowArr) && rowArr[col] === 1) {
-          cell.classList.add('filled');
-        } else {
-          cell.classList.remove('filled');
-        }
-      });
-    }
-
-    // Fill motion matrix if provided
-    if (Array.isArray(data.motion)) {
-      const rows = $('motion-matrix').tBodies[0].rows;
-      for (let t = 0; t < rows.length; t++) {
-        const rowData = data.motion[t];
-        if (!Array.isArray(rowData)) continue;
-        const inputs = rows[t].querySelectorAll('input');
-        for (let k = 0; k < inputs.length && k < rowData.length; k++) {
-          inputs[k].value = rowData[k];
-        }
-      }
-    }
-
-    setStatus(`Loaded "${file.name}". Adjust if needed, then click Initialize.`, 'info');
+    applyParamData(data, file.name);
   };
   reader.readAsText(file);
 }

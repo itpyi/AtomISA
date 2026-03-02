@@ -2,6 +2,12 @@
 
 ## Session 2026-03-02 (session 2)
 
+### Feature: preset example dropdown
+
+Added a "📋 Load Preset…" `<select>` dropdown in `aam.html` (between the Load and Save buttons). Preset data for `surface-code-X.json` and `surface-code-Z.json` is embedded directly in `aam.js` as the `PRESETS` object. Selecting a preset calls `loadPreset()` → `applyParamData()`. Refactored the shared population logic from `loadFromFile` into `applyParamData()` so both file-load and preset-load share the same code path.
+
+**Files changed:** `visualization/aam.js`, `visualization/aam.html`
+
 ### Feature: "Save to File" button
 
 Added `saveToFile()` in `aam.js` and a "💾 Save to File" button in `aam.html` (next to the existing Load button). Clicking it downloads current UI parameters as `aam-params.json` in the same format as `example.json` (scalars + occupation grid row-major top-first + motion matrix).

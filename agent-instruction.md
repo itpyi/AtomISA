@@ -22,6 +22,9 @@ Instructions for agent
 - [x] Make the step button a large move (t) instead of 4 separate substeps.
 - [x] Make the empty dynamic lattice fill transparant rather than now with a light color.
 
+## Examples
+
+- [x] I have written two more example files for measuring surface code stabilizers. Add a button to choose to load the params from these files.
 
 ## GitHub Pages
 
