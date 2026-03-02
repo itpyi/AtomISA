@@ -1,5 +1,14 @@
 # Agent Log
 
+## Session 2026-03-02 (session 2)
+
+### Visual fix: transparent empty dynamic lattice sites
+
+Changed `C_DYN_EMPTY_FILL` from `'#fff5f0'` to `'transparent'` in `aam.js`. Empty dynamic lattice sites now show only their stroke outline with no fill, making the background visible through them.
+
+**Files changed:** `visualization/aam.js`
+**Instruction todo marked done:** "Make the empty dynamic lattice fill transparent rather than now with a light color."
+
 ## Session 2026-03-02 (follow-up)
 
 ### Bug fix + 2 features in `visualization/aam.js`

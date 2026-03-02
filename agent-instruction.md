@@ -20,6 +20,7 @@ Instructions for agent
 - [x] The step is also realized by an animated move.
 - [x] Make the default example a non-uniform moving, like [[1,3,1,3],[2,5,2,4],[1,3,1,4]].
 - [x] Make the step button a large move (t) instead of 4 separate substeps.
+- [x] Make the empty dynamic lattice fill transparant rather than now with a light color.
 
 
 ## GitHub Pages
