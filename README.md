@@ -2,6 +2,8 @@
 
 A browser-based interactive simulator for **AOD Atom Motion (AAM)**, a model of atom rearrangement in neutral-atom quantum computing platforms.
 
+**🌐 Live demo:** [itpyi.github.io/AtomISA](https://itpyi.github.io/AtomISA)
+
 ## Background
 
 In neutral-atom quantum computers, atoms are trapped in two kinds of optical lattices:
@@ -36,12 +38,14 @@ AtomISA/
 └── visualization/
     ├── aam.md                # Visualization design specification
     ├── aam.html              # Main HTML file — open this in a browser
-    └── aam.js                # Simulation logic and canvas renderer
+    ├── aam.js                # Simulation logic and canvas renderer
+    └── example.json          # Sample parameter file for "Load from File"
 ```
 
 ## Usage
 
 Open `visualization/aam.html` in any modern browser — no build step or server required.
+Or visit the [live demo](https://itpyi.github.io/AtomISA).
 
 ### Parameter input (left panel)
 
@@ -56,11 +60,43 @@ Open `visualization/aam.html` in any modern browser — no build step or server 
 
 After editing parameters, click **Rebuild Inputs** to regenerate the grid and matrix, then click **Initialize** to set up the simulation.
 
+### Loading parameters from a file
+
+Click **📂 Load from File** and select a `.json` file. All fields are populated
+automatically and `Rebuild Inputs` is called. The JSON format is:
+
+```json
+{
+  "Nx": 5, "Ny": 5,
+  "dx": 2, "dy": 2,
+  "T": 2,
+  "delta": 0.2,
+  "occupation": [
+    [1, 1, 0, 1, 1],
+    [0, 1, 1, 1, 0],
+    [1, 0, 1, 0, 1],
+    [1, 1, 0, 1, 1],
+    [0, 1, 1, 0, 1]
+  ],
+  "motion": [
+    [1, 3, 1, 3],
+    [2, 5, 2, 4],
+    [1, 3, 1, 4]
+  ]
+}
+```
+
+- `occupation[row][col]` — row 0 is the **top** row (y = N_y); `1` = occupied, `0` = empty.
+- `motion[t]` — first `d_x` values are x-coordinates, next `d_y` values are y-coordinates.
+
+See `visualization/example.json` for a ready-to-use sample.
+
 ### Controls
 
 | Button | Action |
 |--------|--------|
 | **Rebuild Inputs** | Regenerate the occupation grid and motion matrix for the current parameter values |
+| **📂 Load from File** | Load all parameters from a JSON file |
 | **Initialize** | Validate all inputs, execute pickup, and draw the initial state |
 | **▶ Play** | Run the full animation continuously; click again to pause |
 | **Step move →** | Animate one complete move(t) (all 4 sub-steps), then pause |

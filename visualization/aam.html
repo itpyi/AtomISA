@@ -301,6 +301,8 @@
       </div>
       <div class="btn-row" style="margin-top:10px;">
         <button class="btn-secondary" id="btn-rebuild" onclick="rebuildInputs()">Rebuild Inputs</button>
+        <button class="btn-secondary" id="btn-load-file" onclick="document.getElementById('file-input').click()">📂 Load from File</button>
+        <input type="file" id="file-input" accept=".json" style="display:none" onchange="loadFromFile(this)">
       </div>
     </div>
 

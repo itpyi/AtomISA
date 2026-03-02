@@ -20,3 +20,22 @@ Instructions for agent
 - [x] The step is also realized by an animated move.
 - [x] Make the default example a non-uniform moving, like [[1,3,1,3],[2,5,2,4],[1,3,1,4]].
 - [x] Make the step button a large move (t) instead of 4 separate substeps.
+
+
+## GitHub Pages
+
+- [x] Prepare for publishing using GitHub Pages.
+  - Created `index.html` at repo root (redirects to `visualization/aam.html`).
+  - To activate: repo Settings → Pages → Source: `main`, folder `/`.
+
+## Load Parameters from File
+
+### Description
+
+Users can load all simulation parameters from a `.json` file via a "📂 Load from File"
+button in the UI. The file format is documented in `README.md` and a sample is at
+`visualization/example.json`.
+
+### Todo
+
+- [ ] (optional) Add a "Save to File" button that exports current parameters as JSON.

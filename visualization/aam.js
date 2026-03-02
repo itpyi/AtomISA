@@ -184,6 +184,75 @@ function rebuildInputs() {
 }
 
 // =============================================================================
+// LOAD PARAMETERS FROM JSON FILE
+// =============================================================================
+function loadFromFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = ''; // reset so same file can be re-loaded
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    let data;
+    try {
+      data = JSON.parse(e.target.result);
+    } catch (err) {
+      setStatus('Error: could not parse JSON file — ' + err.message, 'error');
+      return;
+    }
+    // Validate required numeric fields
+    const required = ['Nx','Ny','dx','dy','T','delta'];
+    for (const key of required) {
+      if (typeof data[key] !== 'number') {
+        setStatus(`Error: missing or invalid field "${key}" in file.`, 'error');
+        return;
+      }
+    }
+    // Set scalar params
+    $('param-Nx').value    = data.Nx;
+    $('param-Ny').value    = data.Ny;
+    $('param-dx').value    = data.dx;
+    $('param-dy').value    = data.dy;
+    $('param-T').value     = data.T;
+    $('param-delta').value = data.delta;
+
+    // Rebuild grid and matrix with new dimensions
+    rebuildInputs();
+
+    // Fill occupation grid if provided
+    if (Array.isArray(data.occupation)) {
+      const cells = $('occ-grid').querySelectorAll('.occ-cell');
+      // data.occupation[row][col], row 0 = top (y=Ny)
+      cells.forEach(cell => {
+        const col = parseInt(cell.dataset.x) - 1; // 0-indexed
+        const row = data.Ny - parseInt(cell.dataset.y); // 0-indexed from top
+        const rowArr = data.occupation[row];
+        if (Array.isArray(rowArr) && rowArr[col] === 1) {
+          cell.classList.add('filled');
+        } else {
+          cell.classList.remove('filled');
+        }
+      });
+    }
+
+    // Fill motion matrix if provided
+    if (Array.isArray(data.motion)) {
+      const rows = $('motion-matrix').tBodies[0].rows;
+      for (let t = 0; t < rows.length; t++) {
+        const rowData = data.motion[t];
+        if (!Array.isArray(rowData)) continue;
+        const inputs = rows[t].querySelectorAll('input');
+        for (let k = 0; k < inputs.length && k < rowData.length; k++) {
+          inputs[k].value = rowData[k];
+        }
+      }
+    }
+
+    setStatus(`Loaded "${file.name}". Adjust if needed, then click Initialize.`, 'info');
+  };
+  reader.readAsText(file);
+}
+
+// =============================================================================
 // PARAMETER PARSING & VALIDATION
 // =============================================================================
 function parseParameters() {

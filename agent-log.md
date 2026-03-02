@@ -48,3 +48,20 @@
 - Speed slider: 100–2000ms per sub-step
 
 *Default example loaded:* 5×5 static lattice, 2×2 dynamic (dx=dy=2), T=2, M=[[1,3,1,3],[2,4,2,4],[1,3,1,3]]
+
+## Session 2026-03-02 (GitHub Pages + Load from File)
+
+### GitHub Pages preparation
+
+- Created `index.html` at repo root with `<meta http-equiv="refresh">` + JS redirect to `visualization/aam.html`.
+- Updated `README.md`: added live demo link (`itpyi.github.io/AtomISA`).
+- Note: enabling Pages in GitHub repo settings (Settings → Pages → Source: `main`, `/`) is a manual one-time step.
+
+### Feature: Load Parameters from File
+
+- Added **"📂 Load from File"** button + hidden `<input type="file" accept=".json">` to the Lattice Parameters section of `aam.html`.
+- Implemented `loadFromFile()` in `aam.js`: reads JSON, validates required numeric fields, sets scalar params, calls `rebuildInputs()`, then fills the occupation grid and motion matrix from `occupation` and `motion` arrays.
+- JSON format: `{ Nx, Ny, dx, dy, T, delta, occupation[][], motion[][] }` — `occupation[row][col]` with row 0 = top (y=Ny); `motion[t]` = first dx x-coords then dy y-coords.
+- Created `visualization/example.json` as a ready-to-use sample file.
+- Documented file format and button in `README.md`.
+- Updated `agent-instruction.md`: marked GitHub Pages todo done, added Load-from-File section.
