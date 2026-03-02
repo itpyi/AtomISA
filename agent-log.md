@@ -2,6 +2,12 @@
 
 ## Session 2026-03-02 (session 2)
 
+### Feature: "Save to File" button
+
+Added `saveToFile()` in `aam.js` and a "💾 Save to File" button in `aam.html` (next to the existing Load button). Clicking it downloads current UI parameters as `aam-params.json` in the same format as `example.json` (scalars + occupation grid row-major top-first + motion matrix).
+
+**Files changed:** `visualization/aam.js`, `visualization/aam.html`
+
 ### Visual fix: transparent empty dynamic lattice sites
 
 Changed `C_DYN_EMPTY_FILL` from `'#fff5f0'` to `'transparent'` in `aam.js`. Empty dynamic lattice sites now show only their stroke outline with no fill, making the background visible through them.

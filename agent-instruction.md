@@ -39,4 +39,4 @@ button in the UI. The file format is documented in `README.md` and a sample is a
 
 ### Todo
 
-- [ ] (optional) Add a "Save to File" button that exports current parameters as JSON.
+- [x] Add a "Save to File" button that exports current parameters as JSON.

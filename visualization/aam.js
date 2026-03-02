@@ -252,6 +252,42 @@ function loadFromFile(input) {
   reader.readAsText(file);
 }
 
+function saveToFile() {
+  const Nx    = parseInt($('param-Nx').value);
+  const Ny    = parseInt($('param-Ny').value);
+  const dx    = parseInt($('param-dx').value);
+  const dy    = parseInt($('param-dy').value);
+  const T     = parseInt($('param-T').value);
+  const delta = parseFloat($('param-delta').value);
+
+  // occupation: row 0 = top (y=Ny), row-major
+  const osRaw = getOccupationMatrix(); // osRaw[x-1][y-1]
+  const occupation = [];
+  for (let row = 0; row < Ny; row++) {
+    const y = Ny - 1 - row; // y index (0-based), top row first
+    const rowArr = [];
+    for (let x = 0; x < Nx; x++) rowArr.push(osRaw[x][y]);
+    occupation.push(rowArr);
+  }
+
+  // motion: each row = [x0..x_dx-1, y0..y_dy-1] for time t
+  const motion = [];
+  const rows = $('motion-matrix').tBodies[0].rows;
+  for (let t = 0; t < rows.length; t++) {
+    const inputs = rows[t].querySelectorAll('input');
+    motion.push(Array.from(inputs, inp => parseInt(inp.value)));
+  }
+
+  const data = { Nx, Ny, dx, dy, T, delta, occupation, motion };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'aam-params.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 // =============================================================================
 // PARAMETER PARSING & VALIDATION
 // =============================================================================
