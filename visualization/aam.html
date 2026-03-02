@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AAM – AOD Atom Motion Visualization</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.02em; }
+    header span { font-size: 0.85rem; color: #94a3b8; }
+
+    #app {
+      display: flex;
+      height: calc(100vh - 48px);
+      overflow: hidden;
+    }
+
+    /* ── Left panel ── */
+    #input-panel {
+      width: 380px;
+      min-width: 320px;
+      background: #fff;
+      border-right: 1px solid #e2e8f0;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .param-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .param-item label {
+      display: block;
+      font-size: 0.78rem;
+      color: #475569;
+      margin-bottom: 2px;
+    }
+    .param-item input[type=number] {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 0.9rem;
+      background: #f8fafc;
+      transition: border-color 0.15s;
+    }
+    .param-item input[type=number]:focus {
+      outline: none;
+      border-color: #6366f1;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 7px 14px;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary   { background: #4f46e5; color: #fff; }
+    .btn-primary:hover:not(:disabled)   { background: #4338ca; }
+    .btn-secondary { background: #e2e8f0; color: #1e293b; }
+    .btn-secondary:hover:not(:disabled) { background: #cbd5e1; }
+    .btn-success   { background: #22c55e; color: #fff; }
+    .btn-success:hover:not(:disabled)   { background: #16a34a; }
+    .btn-danger    { background: #ef4444; color: #fff; }
+    .btn-danger:hover:not(:disabled)    { background: #dc2626; }
+
+    .btn-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .btn-row button { flex: 1; }
+
+    /* ── Occupation grid ── */
+    #occ-grid-container {
+      overflow: auto;
+    }
+    #occ-grid {
+      display: inline-grid;
+      gap: 3px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 6px;
+      background: #f8fafc;
+    }
+    .occ-cell {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid #94a3b8;
+      background: #fff;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      color: transparent;
+    }
+    .occ-cell.filled {
+      background: #1d4ed8;
+      border-color: #1e40af;
+      color: #fff;
+    }
+    .occ-cell:hover { border-color: #6366f1; }
+
+    /* ── Motion matrix ── */
+    #matrix-wrapper {
+      overflow: auto;
+    }
+    #motion-matrix {
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    #motion-matrix th, #motion-matrix td {
+      border: 1px solid #e2e8f0;
+      padding: 2px;
+    }
+    #motion-matrix th {
+      background: #f1f5f9;
+      font-size: 0.7rem;
+      color: #475569;
+      text-align: center;
+      padding: 4px 6px;
+    }
+    #motion-matrix th.x-header { background: #ede9fe; color: #4f46e5; }
+    #motion-matrix th.y-header { background: #fef3c7; color: #92400e; }
+    #motion-matrix td { text-align: center; }
+    #motion-matrix td input {
+      width: 38px;
+      border: none;
+      background: transparent;
+      text-align: center;
+      font-size: 0.85rem;
+      padding: 2px;
+      color: #1e293b;
+    }
+    #motion-matrix td input:focus { outline: 1px solid #6366f1; border-radius: 3px; background: #eef2ff; }
+    #motion-matrix td.x-col { background: #f5f3ff; }
+    #motion-matrix td.y-col { background: #fffbeb; }
+    #motion-matrix .t-label { background: #f8fafc; color: #64748b; font-size: 0.7rem; }
+
+    /* ── Speed slider ── */
+    .speed-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: #475569;
+    }
+    .speed-row input[type=range] { flex: 1; }
+
+    /* ── Right panel ── */
+    #viz-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      overflow: hidden;
+      padding: 16px;
+      position: relative;
+    }
+
+    #canvas-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+      width: 100%;
+    }
+
+    #aam-canvas {
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      display: block;
+    }
+
+    #status-bar {
+      width: 100%;
+      max-width: 600px;
+      min-height: 32px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      text-align: center;
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+    #status-bar.success { background: #dcfce7; color: #166534; border-color: #86efac; }
+    #status-bar.error   { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+    #status-bar.info    { background: #e0f2fe; color: #0c4a6e; border-color: #7dd3fc; }
+
+    /* ── Legend ── */
+    #legend {
+      display: flex;
+      gap: 16px;
+      font-size: 0.78rem;
+      color: #475569;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-circle {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid #94a3b8;
+    }
+    .legend-circle.static-empty  { background: #fff; border-color: #94a3b8; }
+    .legend-circle.static-filled { background: #1d4ed8; border-color: #1e40af; }
+    .legend-circle.dynamic-empty { background: #fff; border-color: #f97316; }
+    .legend-circle.dynamic-filled { background: #f97316; border-color: #ea580c; }
+
+    /* ── Phase indicator ── */
+    #phase-indicator {
+      font-size: 0.78rem;
+      color: #64748b;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>AAM Visualization</h1>
+  <span>AOD Atom Motion Simulator</span>
+</header>
+
+<div id="app">
+
+  <!-- ═══════════════════════════ Left Panel ═══════════════════════════ -->
+  <div id="input-panel">
+
+    <!-- Lattice parameters -->
+    <div>
+      <div class="section-title">Lattice Parameters</div>
+      <div class="param-grid">
+        <div class="param-item">
+          <label>N<sub>x</sub> (static cols)</label>
+          <input type="number" id="param-Nx" value="5" min="2" max="12">
+        </div>
+        <div class="param-item">
+          <label>N<sub>y</sub> (static rows)</label>
+          <input type="number" id="param-Ny" value="5" min="2" max="12">
+        </div>
+        <div class="param-item">
+          <label>d<sub>x</sub> (AOD cols)</label>
+          <input type="number" id="param-dx" value="2" min="1" max="8">
+        </div>
+        <div class="param-item">
+          <label>d<sub>y</sub> (AOD rows)</label>
+          <input type="number" id="param-dy" value="2" min="1" max="8">
+        </div>
+        <div class="param-item">
+          <label>T (motion steps)</label>
+          <input type="number" id="param-T" value="2" min="1" max="10">
+        </div>
+        <div class="param-item">
+          <label>δ (back-and param)</label>
+          <input type="number" id="param-delta" value="0.2" min="0" max="0.49" step="0.05">
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn-secondary" id="btn-rebuild" onclick="rebuildInputs()">Rebuild Inputs</button>
+      </div>
+    </div>
+
+    <!-- Static occupation -->
+    <div>
+      <div class="section-title">Static Occupation (click to toggle)</div>
+      <div id="occ-grid-container">
+        <div id="occ-grid"></div>
+      </div>
+      <div style="margin-top:6px; font-size:0.75rem; color:#94a3b8;">
+        Blue = occupied · White = empty · y-axis: bottom=1, top=N<sub>y</sub>
+      </div>
+    </div>
+
+    <!-- Motion matrix -->
+    <div>
+      <div class="section-title">Motion Matrix M[t][coords]</div>
+      <div id="matrix-wrapper">
+        <table id="motion-matrix"></table>
+      </div>
+      <div style="margin-top:6px; font-size:0.75rem; color:#94a3b8;">
+        Purple = x-coords · Amber = y-coords · Values: integers in lattice range
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div>
+      <div class="section-title">Controls</div>
+      <div class="btn-row" style="margin-bottom:8px;">
+        <button class="btn-primary" id="btn-init" onclick="onInitialize()">Initialize</button>
+        <button class="btn-secondary" id="btn-reset" onclick="onReset()" disabled>Reset</button>
+      </div>
+      <div class="btn-row" style="margin-bottom:8px;">
+        <button class="btn-success" id="btn-play" onclick="onPlayPause()" disabled>▶ Play</button>
+        <button class="btn-secondary" id="btn-step" onclick="onStep()" disabled>Step move →</button>
+      </div>
+      <div class="speed-row">
+        <span>Fast</span>
+        <input type="range" id="speed-slider" min="100" max="2000" value="500" step="100"
+               oninput="onSpeedChange(this.value)">
+        <span>Slow</span>
+        <span id="speed-label" style="min-width:50px;">500ms</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════ Right Panel ═══════════════════════════ -->
+  <div id="viz-panel">
+
+    <div id="legend">
+      <div class="legend-item">
+        <div class="legend-circle static-empty"></div>
+        <span>Static empty</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-circle static-filled"></div>
+        <span>Static filled</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-circle dynamic-empty"></div>
+        <span>AOD empty</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-circle dynamic-filled"></div>
+        <span>AOD filled</span>
+      </div>
+    </div>
+
+    <div id="canvas-wrapper">
+      <canvas id="aam-canvas" width="400" height="400"></canvas>
+    </div>
+
+    <div id="phase-indicator">Phase: idle</div>
+    <div id="status-bar">Click "Initialize" to start.</div>
+
+  </div>
+
+</div>
+
+<script src="aam.js"></script>
+</body>
+</html>
