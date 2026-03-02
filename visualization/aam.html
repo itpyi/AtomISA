@@ -94,7 +94,16 @@
     .btn-primary:hover:not(:disabled)   { background: #4338ca; }
     .btn-secondary { background: #e2e8f0; color: #1e293b; border: none; }
     .btn-secondary:hover:not(:disabled) { background: #cbd5e1; }
-    select.btn-secondary { border: none; }
+    select.btn-secondary {
+      border: none;
+      border-radius: 6px;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%231e293b' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      padding-right: 28px;
+    }
     .btn-success   { background: #22c55e; color: #fff; }
     .btn-success:hover:not(:disabled)   { background: #16a34a; }
     .btn-danger    { background: #ef4444; color: #fff; }
