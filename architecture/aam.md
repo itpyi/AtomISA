@@ -28,7 +28,7 @@ Intuitively, in a motion cycle, an AOD carries some atoms, travels around, and f
 
 **Definition.** By acting a motion cycle $M(d_x,d_y,T)$ to a static occupation function $\text{os}$, it updates the occupation function through following two steps:
 - For all $(i,j)$, $\text{od}(i, j) = \text{os}(x_i(0), y_j(0)), \text{os}(x_i(0), y_j(0)) = 0$.
-- If for all $(i,j)$, $\text{os}(x_i(T), y_j(T)) \text{od}(i,j) = 0$ (call this offload condition), then update $\text{os}(x_i(T), y_j(T))=\text{od}(i,j)$. Otherwise, we say the motion cycle $M(d_x,d_y,T)$ cannot be acted on the occupation function.
+- If for all $(i,j)$, $\text{os}(x_i(T), y_j(T)) \text{od}(i,j) = 0$ (call this offload condition), then update $\text{os}(x_i(T), y_j(T))=\text{os}(x_i(T), y_j(T)) + \text{od}(i,j)$. Otherwise, we say the motion cycle $M(d_x,d_y,T)$ cannot be acted on the occupation function.
 
 ### Entangling gate
 

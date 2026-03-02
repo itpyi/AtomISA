@@ -368,7 +368,7 @@ function doOffload() {
       for (let j = 0; j < P.dy; j++) {
         const xi = P.M_x[P.T][i] - 1;
         const yj = P.M_y[P.T][j] - 1;
-        S.os[xi][yj] = S.od[i][j];
+        S.os[xi][yj] += S.od[i][j];
       }
     }
     // Clear dynamic lattice
