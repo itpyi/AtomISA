@@ -1,5 +1,61 @@
 # Agent Log
 
+## Session 2026-04-08 (Session 5)
+
+### Feature: Footer Bar with Last Commit Date and GitHub Link
+
+**Commit:** `c915978`
+
+**Task:** Complete the open todo to add a bottom bar displaying the last commit date and a link to the GitHub repository on both pages.
+
+**Actions taken:**
+
+1. **Identified repository details**:
+   - Repository: `itpyi/AtomISA`
+   - Branch: `main`
+   - GitHub API endpoint: `https://api.github.com/repos/itpyi/AtomISA/commits/main`
+
+2. **Designed footer component** (both `index.html` and `visualization/aam.html`):
+   - Fixed position at bottom of viewport
+   - Dark theme matching existing header (`#1e293b` background)
+   - Content: "Last updated: [date] | View on GitHub"
+   - Responsive and minimalist design
+   - z-index 1000 to stay on top
+
+3. **Implemented JavaScript for automatic date fetching**:
+   - Fetches commit data from GitHub API on page load
+   - Extracts `commit.author.date` from API response
+   - Formats date as "Month Day, Year" (e.g., "April 8, 2026")
+   - Caches result in localStorage with 1-hour expiry to minimize API calls
+   - Graceful error handling: displays "Recently" if API fails
+   - Same script used on both pages
+
+4. **Added footer to `visualization/aam.html`**:
+   - Inserted footer HTML before closing `</body>` tag
+   - Added footer CSS styles (35 lines)
+   - Included inline JavaScript for API fetching (60 lines)
+   - Adjusted main app height: `calc(100vh - 48px - 33px)` to accommodate footer
+
+5. **Added footer to `index.html`**:
+   - Inserted footer HTML and styles
+   - Included same JavaScript for date fetching
+   - Enhanced page styling for better redirect page appearance
+
+6. **Marked todo complete** (`agent-instruction.md`):
+   - Changed checkbox from `[ ]` to `[x]` for the GitHub Pages footer todo
+
+**Technical details:**
+- **API caching**: Reduces API calls from every page load to once per hour per user
+- **Error handling**: Network failures or rate limits show fallback text
+- **Performance**: Non-blocking fetch with try-catch for localStorage operations
+- **Consistency**: Shared cache key (`aam_commit_date`) between pages
+
+**Result:** Both pages now display an automatic footer showing the last commit date from GitHub and a link to the repository. The date updates automatically when new commits are pushed (after cache expiry).
+
+**Commit:** `c915978` - "Add footer bar with last commit date and GitHub link"
+
+---
+
 ## Session 2026-04-08 (Session 4)
 
 ### Feature: Separate Preset and Download Data Structures by Mode
