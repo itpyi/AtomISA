@@ -27,7 +27,7 @@
 
     #app {
       display: flex;
-      height: calc(100vh - 48px);
+      height: calc(100vh - 48px - 33px); /* header height - footer height */
       overflow: hidden;
     }
 
@@ -267,6 +267,35 @@
       color: #64748b;
       font-family: monospace;
     }
+
+    /* ── Footer ── */
+    #footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1e293b;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      padding: 8px 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      z-index: 1000;
+      border-top: 1px solid #334155;
+    }
+    #footer a {
+      color: #60a5fa;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    #footer a:hover {
+      color: #93c5fd;
+    }
+    #footer-update-date {
+      color: #cbd5e1;
+    }
   </style>
 </head>
 <body>
@@ -401,6 +430,72 @@
 
 </div>
 
+<div id="footer">
+  <span id="footer-update-date">Last updated: <span id="commit-date">Loading...</span></span>
+  <span>|</span>
+  <a href="https://github.com/itpyi/AtomISA" target="_blank" rel="noopener">View on GitHub</a>
+</div>
+
 <script src="aam.js"></script>
+<script>
+// Fetch last commit date from GitHub API
+(function() {
+  const CACHE_KEY = 'aam_commit_date';
+  const CACHE_DURATION = 3600000; // 1 hour in milliseconds
+  const REPO_OWNER = 'itpyi';
+  const REPO_NAME = 'AtomISA';
+  const BRANCH = 'main';
+  
+  function formatDate(isoString) {
+    const date = new Date(isoString);
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  }
+  
+  function displayDate(dateStr) {
+    const el = document.getElementById('commit-date');
+    if (el) el.textContent = dateStr;
+  }
+  
+  // Check cache first
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { date, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < CACHE_DURATION) {
+        displayDate(formatDate(date));
+        return;
+      }
+    }
+  } catch (e) {
+    // Cache error, continue to fetch
+  }
+  
+  // Fetch from GitHub API
+  fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/commits/${BRANCH}`)
+    .then(res => {
+      if (!res.ok) throw new Error('API request failed');
+      return res.json();
+    })
+    .then(data => {
+      const commitDate = data.commit.author.date;
+      displayDate(formatDate(commitDate));
+      
+      // Cache the result
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          date: commitDate,
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        // localStorage error, ignore
+      }
+    })
+    .catch(err => {
+      console.warn('Could not fetch commit date:', err);
+      displayDate('Recently');
+    });
+})();
+</script>
 </body>
 </html>

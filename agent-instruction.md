@@ -31,6 +31,7 @@ Instructions for agent
 - [x] Prepare for publishing using GitHub Pages.
   - Created `index.html` at repo root (redirects to `visualization/aam.html`).
   - To activate: repo Settings → Pages → Source: `main`, folder `/`.
+- [x] Add a bottom bar for displaying update date (date of commit) and github repo.
 
 ## Load Parameters from File
 
