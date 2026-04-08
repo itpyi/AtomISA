@@ -2,6 +2,7 @@
 
 | Date | Action |
 |------|--------|
+| 2026-04-08 | Documentation session: Added QN mode section to README.md; documented commit 141eabb in agent-log.md (mode toggle, simplified input UI, coordinate generation); updated agent-log-brief.md; marked both QN todos complete in agent-instruction.md. Commit 3cf54cc. |
 | 2026-04-08 | Implemented QN mode (commit 141eabb): added mode toggle button in header; QN input UI with simplified table (x₁(t), y₁(t), aₓ, aᵧ); automatic coordinate generation x_n = x₁ + (n-1)×aₓ; validation for bounds and strictly increasing sequences. Updated architecture docs. |
 | 2026-03-02 | Added "📋 Load Preset…" dropdown in `aam.html`/`aam.js`: embeds Surface Code X and Z stabilizer examples; selecting one instantly populates all params. Refactored load logic into shared `applyParamData()`. |
 | 2026-03-02 | Added "💾 Save to File" button in `aam.html`/`aam.js`: exports current UI parameters (scalars + occupation grid + motion matrix) as a downloadable `aam-params.json`. |

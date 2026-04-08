@@ -1,5 +1,35 @@
 # Agent Log
 
+## Session 2026-04-08 (Session 2)
+
+### Documentation: QN Mode from Previous Session
+
+**Issue:** The QN mode was implemented in commit 141eabb but was not documented in README.md or agent logs.
+
+**Actions taken:**
+1. **README.md:** Added comprehensive "QN Mode" section under Usage explaining:
+   - Mode toggle button in header (Original ↔ QN)
+   - QN input interface with simplified table (x₁(t), y₁(t), aₓ, aᵧ)
+   - Automatic coordinate generation formula: x_n(t) = x₁(t) + (n−1) × a_x
+   - When to use QN mode (uniform lattice constraints, near-term hardware)
+   - Validation behavior (bounds checking, strictly increasing)
+
+2. **agent-log.md:** Added detailed implementation entry for commit 141eabb documenting:
+   - Files changed and what was added to each
+   - Mode toggle functionality
+   - QN input UI structure
+   - Coordinate generation algorithm
+   - Validation enhancements
+   - QN constraints per architecture spec
+
+3. **agent-log-brief.md:** Added concise one-line entry with date 2026-04-08
+
+4. **agent-instruction.md:** Verified first QN todo marked [x], marked second todo (SC-X preset) as [x] complete since `aam-params-sc-x.json` already has uniform spacing (aₓ=1, aᵧ=1) compatible with QN mode.
+
+**Note:** QN mode is a UI input feature for simplified parameter entry. JSON files continue using the full motion matrix format for compatibility. The `aam-params-sc-x.json` file has uniform spacing and can be used in either mode.
+
+**Commit:** 3cf54cc "Document QN mode and mark SC-X preset complete"
+
 ## Session 2026-04-08
 
 ### Feature: QN Mode Implementation
