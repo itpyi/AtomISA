@@ -223,7 +223,29 @@ function applyParamData(data, label) {
     });
   }
 
-  if (Array.isArray(data.motion)) {
+  // Handle QN format (ax, ay, x1, y1 arrays)
+  if (typeof data.ax === 'number' && typeof data.ay === 'number' && 
+      Array.isArray(data.x1) && Array.isArray(data.y1)) {
+    // Populate QN inputs
+    const axInput = $('qn-ax');
+    const ayInput = $('qn-ay');
+    if (axInput) axInput.value = data.ax;
+    if (ayInput) ayInput.value = data.ay;
+    
+    const qnTable = $('qn-motion-table');
+    if (qnTable && qnTable.tBodies[0]) {
+      const rows = qnTable.tBodies[0].rows;
+      for (let t = 0; t < rows.length && t < data.x1.length && t < data.y1.length; t++) {
+        const inputs = rows[t].querySelectorAll('input');
+        if (inputs.length >= 2) {
+          inputs[0].value = data.x1[t]; // x1(t)
+          inputs[1].value = data.y1[t]; // y1(t)
+        }
+      }
+    }
+  }
+  // Handle Original format (full motion matrix)
+  else if (Array.isArray(data.motion)) {
     const rows = $('motion-matrix').tBodies[0].rows;
     for (let t = 0; t < rows.length; t++) {
       const rowData = data.motion[t];
@@ -273,6 +295,23 @@ const PRESETS = {
       [2,3,1,2,3,4],
       [3,4,1,2,3,4],
       [9,10,2,3,4,5]
+    ]
+  },
+  'surface-code-X-qn': {
+    _label: 'Surface Code X Stabilizer (QN)',
+    Nx: 10, Ny: 8, dx: 4, dy: 2, T: 5, delta: 0.2,
+    ax: 1, ay: 1,
+    x1: [5, 1, 1, 2, 2, 5],
+    y1: [3, 3, 2, 3, 2, 3],
+    occupation: [
+      [0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0],
+      [0,1,1,1,1,0,1,0,0,1],
+      [0,1,1,1,0,1,0,1,1,0],
+      [0,1,1,1,0,0,0,0,0,1],
+      [0,0,0,0,0,0,0,0,1,0]
     ]
   }
 };

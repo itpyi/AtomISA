@@ -1,5 +1,37 @@
 # Agent Log
 
+## Session 2026-04-08 (Session 3)
+
+### Feature: Surface Code X Stabilizer QN Preset
+
+**Task:** Implement the open todo to add a QN mode preset for the Surface Code X Stabilizer using parameters from `aam-params-sc-x.json`.
+
+**Actions taken:**
+
+1. **Analyzed motion matrix** in `aam-params-sc-x.json`:
+   - Confirmed uniform spacing: ax = 1, ay = 1
+   - Extracted QN parameters: x1 = [5,1,1,2,2,5], y1 = [3,3,2,3,2,3]
+   - Verified formula: x_n(t) = x1(t) + (n-1)×ax holds for all timesteps
+   - Lattice dimensions: 10×8 (Nx=10, Ny=8)
+
+2. **Updated `visualization/aam.js`**:
+   - Added new preset 'surface-code-X-qn' to PRESETS object (after line 277)
+   - Preset uses QN format with fields: ax, ay, x1[], y1[], occupation[]
+   - Kept existing 'surface-code-X' preset (10×5 Original mode) for backward compatibility
+   - Enhanced `applyParamData()` function to handle both QN format (ax/ay/x1/y1) and Original format (motion matrix)
+   - QN format detection: checks for ax, ay, x1, y1 fields and populates QN input UI accordingly
+
+3. **Updated `visualization/aam.html`**:
+   - Added dropdown option: `<option value="surface-code-X-qn">Surface Code X Stabilizer (QN)</option>`
+   - Positioned after the existing X and Z stabilizer options
+
+4. **Marked todo complete** in `agent-instruction.md`:
+   - Changed line 50 checkbox from [ ] to [x]
+
+**Result:** Users can now select "Surface Code X Stabilizer (QN)" from the preset dropdown, which loads a 10×8 lattice with uniform spacing (ax=1, ay=1) in QN mode. The older 10×5 Original mode preset remains available for comparison.
+
+**Commit:** (pending)
+
 ## Session 2026-04-08 (Session 2)
 
 ### Documentation: QN Mode from Previous Session
