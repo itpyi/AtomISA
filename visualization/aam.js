@@ -301,8 +301,8 @@ const PRESETS = {
     _label: 'Surface Code X Stabilizer (QN)',
     Nx: 10, Ny: 8, dx: 4, dy: 2, T: 5, delta: 0.2,
     ax: 1, ay: 1,
-    x1: [5, 1, 1, 2, 2, 5],
-    y1: [3, 3, 2, 3, 2, 3],
+    x1: [5, 1, 1, 2, 2, 2],
+    y1: [3, 3, 2, 3, 2, 6],
     occupation: [
       [0,0,0,0,0,0,0,0,0,0],
       [0,0,0,0,0,0,0,0,0,0],
