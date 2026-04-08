@@ -48,3 +48,4 @@ button in the UI. The file format is documented in `README.md` and a sample is a
 
 - [x] Implement QN version.
 - [x] Write `aam-params-sc-x.json` to the QN preset for Surface Code X Stabilizer (Overwrite the old version) so that the user can choose it for display.
+- [x] Separate preset and download date structures for original and QN mode: QN will upload and download its own input structure, and take only the last preset. Original mode takes the first 3 presets.

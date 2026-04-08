@@ -203,6 +203,27 @@ function applyParamData(data, label) {
       return;
     }
   }
+  
+  // Check if mode switching is needed
+  let targetMode = data.mode; // explicit mode in data
+  
+  // Auto-detect mode if not specified (backward compatibility)
+  if (!targetMode) {
+    if (typeof data.ax === 'number' && typeof data.ay === 'number' && 
+        Array.isArray(data.x1) && Array.isArray(data.y1)) {
+      targetMode = 'qn';
+    } else if (Array.isArray(data.motion)) {
+      targetMode = 'original';
+    }
+  }
+  
+  // Switch mode if needed
+  if (targetMode && targetMode !== inputMode) {
+    inputMode = targetMode;
+    $('mode-label').textContent = inputMode === 'original' ? 'Original' : 'QN';
+    updatePresetDropdown(); // Update dropdown for new mode
+  }
+  
   $('param-Nx').value    = data.Nx;
   $('param-Ny').value    = data.Ny;
   $('param-dx').value    = data.dx;
@@ -261,6 +282,7 @@ function applyParamData(data, label) {
 const PRESETS = {
   'surface-code-X': {
     _label: 'Surface Code X Stabilizer',
+    mode: 'original',
     Nx: 10, Ny: 5, dx: 4, dy: 2, T: 5, delta: 0.2,
     occupation: [
       [0,0,0,0,0,0,0,0,0,1],
@@ -280,6 +302,7 @@ const PRESETS = {
   },
   'surface-code-Z': {
     _label: 'Surface Code Z Stabilizer',
+    mode: 'original',
     Nx: 10, Ny: 5, dx: 2, dy: 4, T: 5, delta: 0.2,
     occupation: [
       [0,0,0,0,0,0,0,0,0,1],
@@ -299,6 +322,7 @@ const PRESETS = {
   },
   'surface-code-X-qn': {
     _label: 'Surface Code X Stabilizer (QN)',
+    mode: 'qn',
     Nx: 10, Ny: 8, dx: 4, dy: 2, T: 5, delta: 0.2,
     ax: 1, ay: 1,
     x1: [5, 1, 1, 2, 2, 2],
@@ -315,6 +339,24 @@ const PRESETS = {
     ]
   }
 };
+
+function updatePresetDropdown() {
+  const sel = $('preset-select');
+  if (!sel) return;
+  
+  // Clear existing options except placeholder
+  sel.innerHTML = '<option value="">📋 Load Preset…</option>';
+  
+  // Add presets that match current mode
+  for (const [key, preset] of Object.entries(PRESETS)) {
+    if (preset.mode === inputMode) {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = preset._label;
+      sel.appendChild(opt);
+    }
+  }
+}
 
 function loadPreset(sel) {
   const key = sel.value;
@@ -359,15 +401,42 @@ function saveToFile() {
     occupation.push(rowArr);
   }
 
-  // motion: each row = [x0..x_dx-1, y0..y_dy-1] for time t
-  const motion = [];
-  const rows = $('motion-matrix').tBodies[0].rows;
-  for (let t = 0; t < rows.length; t++) {
-    const inputs = rows[t].querySelectorAll('input');
-    motion.push(Array.from(inputs, inp => parseInt(inp.value)));
+  let data = { mode: inputMode, Nx, Ny, dx, dy, T, delta, occupation };
+  
+  if (inputMode === 'original') {
+    // Save full motion matrix for Original mode
+    const motion = [];
+    const rows = $('motion-matrix').tBodies[0].rows;
+    for (let t = 0; t < rows.length; t++) {
+      const inputs = rows[t].querySelectorAll('input');
+      motion.push(Array.from(inputs, inp => parseInt(inp.value)));
+    }
+    data.motion = motion;
+  } else {
+    // Save QN format: ax, ay, x1[], y1[]
+    const ax = parseInt($('qn-ax').value);
+    const ay = parseInt($('qn-ay').value);
+    const x1 = [];
+    const y1 = [];
+    
+    const qnTable = $('qn-motion-table');
+    if (qnTable && qnTable.tBodies[0]) {
+      const rows = qnTable.tBodies[0].rows;
+      for (let t = 0; t < rows.length; t++) {
+        const inputs = rows[t].querySelectorAll('input');
+        if (inputs.length >= 2) {
+          x1.push(parseInt(inputs[0].value));
+          y1.push(parseInt(inputs[1].value));
+        }
+      }
+    }
+    
+    data.ax = ax;
+    data.ay = ay;
+    data.x1 = x1;
+    data.y1 = y1;
   }
 
-  const data = { Nx, Ny, dx, dy, T, delta, occupation, motion };
   const a = document.createElement('a');
   a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2));
   a.download = 'aam-params.json';
@@ -1038,6 +1107,7 @@ function toggleInputMode() {
   inputMode = (inputMode === 'original') ? 'qn' : 'original';
   $('mode-label').textContent = inputMode === 'original' ? 'Original' : 'QN';
   updateInputPanelForMode();
+  updatePresetDropdown(); // Refresh preset dropdown for new mode
 }
 
 function updateInputPanelForMode() {
@@ -1148,3 +1218,11 @@ function buildQNInputs() {
     y1Cell.appendChild(y1Input);
   }
 }
+
+// =============================================================================
+// INITIALIZATION
+// =============================================================================
+// Initialize preset dropdown on page load
+document.addEventListener('DOMContentLoaded', function() {
+  updatePresetDropdown();
+});
