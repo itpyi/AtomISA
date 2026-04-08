@@ -2,6 +2,7 @@
 
 | Date | Action |
 |------|--------|
+| 2026-04-08 | Separated preset and download data structures by mode (commit 4a3b6a1): Added mode property to presets; presets dropdown now filters by current mode (Original shows 2 presets, QN shows 1); saveToFile() saves mode-specific JSON (Original: motion matrix, QN: ax, ay, x1[], y1[]); applyParamData() auto-switches mode based on JSON mode field; maintained backward compatibility. |
 | 2026-04-08 | Added Surface Code X Stabilizer QN preset: new 'surface-code-X-qn' preset with 10×8 lattice, ax=1, ay=1, x1=[5,1,1,2,2,5], y1=[3,3,2,3,2,3]; enhanced applyParamData() to handle QN format; added dropdown option. Kept original 10×5 preset for compatibility. |
 | 2026-04-08 | Documentation session: Added QN mode section to README.md; documented commit 141eabb in agent-log.md (mode toggle, simplified input UI, coordinate generation); updated agent-log-brief.md; marked both QN todos complete in agent-instruction.md. Commit 3cf54cc. |
 | 2026-04-08 | Implemented QN mode (commit 141eabb): added mode toggle button in header; QN input UI with simplified table (x₁(t), y₁(t), aₓ, aᵧ); automatic coordinate generation x_n = x₁ + (n-1)×aₓ; validation for bounds and strictly increasing sequences. Updated architecture docs. |

@@ -1,5 +1,66 @@
 # Agent Log
 
+## Session 2026-04-08 (Session 4)
+
+### Feature: Separate Preset and Download Data Structures by Mode
+
+**Commit:** `4a3b6a1`
+
+**Task:** Complete the open todo to separate preset selection and file save/load data structures between Original and QN modes.
+
+**Actions taken:**
+
+1. **Added mode property to all presets** (`visualization/aam.js`):
+   - Added `mode: 'original'` to `surface-code-X` and `surface-code-Z` presets
+   - Added `mode: 'qn'` to `surface-code-X-qn` preset
+   - This enables filtering presets by mode
+
+2. **Implemented dynamic preset dropdown filtering** (`visualization/aam.js`):
+   - Created `updatePresetDropdown()` function that rebuilds dropdown options based on current `inputMode`
+   - Original mode: shows only presets with `mode: 'original'` (2 presets)
+   - QN mode: shows only presets with `mode: 'qn'` (1 preset)
+   - Called on page load via DOMContentLoaded event listener
+   - Called when mode is toggled via `toggleInputMode()`
+
+3. **Updated HTML** (`visualization/aam.html`):
+   - Removed hardcoded preset options (were manually listing all 3 presets)
+   - Now only contains placeholder option; presets populated dynamically by JS
+
+4. **Implemented mode-specific save formats** (`visualization/aam.js` - `saveToFile()`):
+   - All saved files now include `mode` field
+   - **Original mode**: saves full motion matrix (existing behavior)
+     - Structure: `{mode: "original", Nx, Ny, dx, dy, T, delta, occupation, motion}`
+   - **QN mode**: saves simplified QN parameters instead of full matrix
+     - Structure: `{mode: "qn", Nx, Ny, dx, dy, T, delta, occupation, ax, ay, x1, y1}`
+     - Extracts ax, ay from input fields; x1, y1 arrays from QN table
+
+5. **Implemented auto mode-switching on load** (`visualization/aam.js` - `applyParamData()`):
+   - Checks for explicit `mode` field in loaded JSON
+   - Auto-detects mode if not specified (backward compatibility):
+     - If data has `ax`, `ay`, `x1`, `y1` → assumes QN mode
+     - If data has `motion` matrix → assumes Original mode
+   - If detected/specified mode differs from current `inputMode`:
+     - Switches `inputMode` variable
+     - Updates mode toggle button label
+     - Calls `updatePresetDropdown()` to refresh preset options
+   - Then proceeds with normal parameter population
+
+6. **Updated example.json** (`visualization/example.json`):
+   - Added `"mode": "original"` field for documentation
+
+7. **Marked todo complete** (`agent-instruction.md`):
+   - Changed checkbox from `[ ]` to `[x]` for the mode separation todo
+
+**Result:** 
+- Preset dropdown now context-aware: shows only relevant presets for current mode
+- Save/Load respects mode boundaries: QN files use simplified structure, Original files use full matrix
+- Loading a file automatically switches to correct mode
+- Full backward compatibility with existing JSON files (auto-detection)
+
+**Commit:** `4a3b6a1` - "Separate preset and download data structures by mode"
+
+---
+
 ## Session 2026-04-08 (Session 3)
 
 ### Feature: Surface Code X Stabilizer QN Preset
