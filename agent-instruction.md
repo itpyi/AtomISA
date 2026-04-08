@@ -47,3 +47,4 @@ button in the UI. The file format is documented in `README.md` and a sample is a
 ## QN version
 
 - [x] Implement QN version.
+- [x] Write `aam-params-sc-x.json` to the QN preset for Surface Code X Stabilizer (Overwrite the old version).

@@ -114,6 +114,31 @@ See `visualization/example.json` for a ready-to-use sample.
 | Green highlight (end) | Offload successful |
 | Red highlight (end) | Offload failed — collision |
 
+### QN Mode (Simplified Input for Uniform Spacing)
+
+The visualization supports two input modes, toggled via the **Mode** button in the header:
+
+| Mode | Description |
+|------|-------------|
+| **Original** | Enter the full motion matrix — all d_x x-coordinates and d_y y-coordinates for each time step |
+| **QN** | Simplified input for uniform lattice spacing — enter only x₁(t), y₁(t), a_x, a_y |
+
+In **QN mode**, the full motion coordinates are generated automatically using:
+
+```
+x_n(t) = x₁(t) + (n−1) × a_x
+y_m(t) = y₁(t) + (m−1) × a_y
+```
+
+where a_x and a_y are uniform spacing parameters for the AOD lattice. This mode is designed for near-term quantum computing hardware with uniform AOD spacing constraints.
+
+**When to use QN mode:**
+- Your motion has constant spacing between AOD columns/rows
+- You want to quickly specify motions without typing all coordinates
+- You're modeling hardware with uniform lattice constraints
+
+The UI validates that generated coordinates stay within bounds [1, N_x] × [1, N_y] and remain strictly increasing.
+
 ### Default example
 
 The page loads with a 5 × 5 static lattice, a 2 × 2 AOD sublattice, T = 2 motion steps, and the non-uniform motion matrix:

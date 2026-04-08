@@ -1,5 +1,47 @@
 # Agent Log
 
+## Session 2026-04-08
+
+### Feature: QN Mode Implementation
+
+**Commit:** 141eabb
+
+Implemented a "QN" (near-term) input mode for the visualization, designed for quantum hardware with uniform AOD lattice spacing constraints. The QN mode simplifies motion input by requiring only starting coordinates and uniform spacing parameters instead of the full motion matrix.
+
+**Files changed:**
+- `visualization/aam.html` — Added mode toggle button in header ("Mode: Original" / "Mode: QN")
+- `visualization/aam.js` — Implemented QN input UI and coordinate generation logic (~270 lines)
+- `visualization/aam.md` — Added note about QN version
+- `architecture/aam.md` — Added "Near term version" section documenting QN constraints
+- `agent-instruction.md` — Marked "Implement QN version" todo as complete
+
+**Implementation details:**
+
+1. **Mode Toggle:** `toggleInputMode()` switches between 'original' and 'qn' modes, updating the UI label and calling `updateInputPanelForMode()` to show/hide appropriate input sections.
+
+2. **QN Input UI:** `buildQNInputs()` creates a simplified table with:
+   - Two input fields: a_x (x-spacing) and a_y (y-spacing)
+   - Table with (T+1) rows, each row containing only x₁(t) and y₁(t) inputs
+   - Formula displayed: x_n(t) = x₁(t) + (n−1)×a_x
+
+3. **Coordinate Generation:** `generateMatrixFromQN(x1Array, y1Array, ax, ay, dx, dy, T)` computes full motion matrix M_x and M_y from simplified QN data:
+   - For each time t and dynamic lattice index i: `x_i(t) = x₁(t) + (i-1) × a_x`
+   - Similarly for y-coordinates with a_y
+
+4. **Validation:** Extended `parseParameters()` to handle both modes:
+   - QN mode: validates x₁(t), y₁(t) are in bounds, then generates full matrix
+   - Checks generated coordinates stay within [1, N_x] × [1, N_y]
+   - Verifies strictly increasing property holds for generated sequences
+   - Reports helpful errors (e.g., "Increase a_x" if spacing too small)
+
+5. **Rebuild Logic:** `rebuildInputs()` now branches based on mode, calling either `buildMotionMatrix()` or `buildQNInputs()`.
+
+**QN constraints (per architecture spec):**
+- Dynamic lattice must have uniform and constant spacing
+- Only requires x₁(t), y₁(t), a_x, a_y as input instead of full coordinate arrays
+
+**Note:** QN mode is a UI input feature. JSON parameter files continue to use the full motion matrix format for compatibility.
+
 ## Session 2026-03-02 (session 2)
 
 ### Feature: preset example dropdown
