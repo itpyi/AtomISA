@@ -43,3 +43,7 @@ button in the UI. The file format is documented in `README.md` and a sample is a
 ### Todo
 
 - [x] Add a "Save to File" button that exports current parameters as JSON.
+
+## QN version
+
+- [x] Implement QN version.

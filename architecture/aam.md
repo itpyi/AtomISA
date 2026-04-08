@@ -35,3 +35,11 @@ Intuitively, in a motion cycle, an AOD carries some atoms, travels around, and f
 In an action of a motion cycle $M(d_x,d_y,T)$, there are $T$ steps. At step $t$, if an overall entangling laser beam is applied, then if a site now has two atoms, they will be applied a CZ gate. The condition is that $\text{os}(x_{i}(t),y_{j}(t))\text{od}(i,j) = 1$.
 
   
+## Near term version
+
+Name Code: QN.
+
+Key restriction: dynamic lattice should have uniform and constant spacing.
+
+Data for dynamic lattice and motion cycle matrix simplified as follows:
+Only requires input $x_1(t), y_1(t); a_x, a_y$, then $x_n = x_1 + (n-1)a_x$ and similar for $y_m$.

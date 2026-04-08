@@ -23,3 +23,7 @@ Refer to `/architecture/aam.md`, including
   - The dynamic lattice circles are empty or filled according to the dynamic occupation function.
   - Before move (0), apply the first update to os and od functions according to the definition in `/architecture/aam.md`.
   - After move (T), check the offload condition and display the result.
+
+## Near term "QN" version
+
+See `/architecture/aam.md`, simplify the input data, and use this simplified data and rules to map to the original data.

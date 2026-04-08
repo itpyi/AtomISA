@@ -31,6 +31,7 @@ let stepPauseTimer = null; // inter-move pause timer id
 let isPlaying = false;
 let moveStepping = false;  // true when Step is animating a full move(t)
 let subStepDuration = 500; // ms per animation sub-step
+let inputMode = 'original'; // 'original' or 'qn'
 
 // Sub-step labels for UI
 const SUB_STEP_LABELS = [
@@ -171,7 +172,13 @@ function clamp(v, lo, hi) {
 // Rebuild both the grid and the matrix when params change
 function rebuildInputs() {
   buildOccupationGrid();
-  buildMotionMatrix();
+  
+  if (inputMode === 'original') {
+    buildMotionMatrix();
+  } else {
+    buildQNInputs();
+  }
+  
   setStatus('Inputs rebuilt. Adjust values then click Initialize.');
   setPhase('idle');
   disableControls();
@@ -333,6 +340,33 @@ function saveToFile() {
 // =============================================================================
 // PARAMETER PARSING & VALIDATION
 // =============================================================================
+
+function generateMatrixFromQN(x1Array, y1Array, ax, ay, dx, dy, T) {
+  // Generate full motion matrix from QN simplified data
+  // x_n(t) = x_1(t) + (n-1) * ax
+  // y_m(t) = y_1(t) + (m-1) * ay
+  
+  const M_x = []; // M_x[t][i] = x-coord of column i at time t (1-indexed lattice)
+  const M_y = []; // M_y[t][j] = y-coord of row j at time t
+  
+  for (let t = 0; t <= T; t++) {
+    const xs = [];
+    for (let i = 0; i < dx; i++) {
+      xs.push(x1Array[t] + i * ax);
+    }
+    
+    const ys = [];
+    for (let j = 0; j < dy; j++) {
+      ys.push(y1Array[t] + j * ay);
+    }
+    
+    M_x.push(xs);
+    M_y.push(ys);
+  }
+  
+  return { M_x, M_y };
+}
+
 function parseParameters() {
   const Nx    = parseInt($('param-Nx').value);
   const Ny    = parseInt($('param-Ny').value);
@@ -345,35 +379,98 @@ function parseParameters() {
   if (dy > Ny) return { err: `dy (${dy}) must be ≤ Ny (${Ny})` };
   if (T < 1)   return { err: 'T must be ≥ 1' };
 
-  // Parse motion matrix
-  const rows = $('motion-matrix').tBodies[0].rows;
-  if (rows.length !== T + 1) return { err: 'Motion matrix row count mismatch. Rebuild inputs.' };
+  let M_x, M_y;
 
-  const M_x = []; // M_x[t][i] = x-coord of column i at time t (1-indexed lattice)
-  const M_y = []; // M_y[t][j] = y-coord of row j at time t
-
-  for (let t = 0; t <= T; t++) {
-    const inputs = rows[t].querySelectorAll('input');
-    if (inputs.length !== dx + dy) return { err: `Matrix row t=${t} has wrong number of inputs.` };
-    const xs = [], ys = [];
-    for (let i = 0; i < dx; i++) {
-      const v = parseInt(inputs[i].value);
-      if (isNaN(v) || v < 1 || v > Nx) return { err: `M[${t}][x${i+1}]=${v} out of range [1,${Nx}]` };
-      xs.push(v);
+  if (inputMode === 'qn') {
+    // Parse QN mode inputs
+    const ax = parseInt($('qn-ax').value);
+    const ay = parseInt($('qn-ay').value);
+    
+    const qnTable = $('qn-motion-table');
+    if (!qnTable || !qnTable.tBodies[0]) return { err: 'QN table not found. Rebuild inputs.' };
+    const rows = qnTable.tBodies[0].rows;
+    if (rows.length !== T + 1) return { err: 'QN table row count mismatch. Rebuild inputs.' };
+    
+    const x1Array = [];
+    const y1Array = [];
+    
+    for (let t = 0; t <= T; t++) {
+      const inputs = rows[t].querySelectorAll('input');
+      if (inputs.length !== 2) return { err: `QN row t=${t} should have 2 inputs.` };
+      
+      const x1 = parseInt(inputs[0].value);
+      const y1 = parseInt(inputs[1].value);
+      
+      if (isNaN(x1) || x1 < 1 || x1 > Nx) return { err: `x₁(${t})=${x1} out of range [1,${Nx}]` };
+      if (isNaN(y1) || y1 < 1 || y1 > Ny) return { err: `y₁(${t})=${y1} out of range [1,${Ny}]` };
+      
+      x1Array.push(x1);
+      y1Array.push(y1);
     }
-    for (let j = 0; j < dy; j++) {
-      const v = parseInt(inputs[dx + j].value);
-      if (isNaN(v) || v < 1 || v > Ny) return { err: `M[${t}][y${j+1}]=${v} out of range [1,${Ny}]` };
-      ys.push(v);
+    
+    // Generate full matrix from QN data
+    const result = generateMatrixFromQN(x1Array, y1Array, ax, ay, dx, dy, T);
+    M_x = result.M_x;
+    M_y = result.M_y;
+    
+    // Validate generated matrix
+    for (let t = 0; t <= T; t++) {
+      // Check bounds
+      for (let i = 0; i < dx; i++) {
+        if (M_x[t][i] < 1 || M_x[t][i] > Nx) {
+          return { err: `Generated x${i+1}(${t})=${M_x[t][i]} out of range [1,${Nx}]. Adjust x₁(${t}) or aₓ.` };
+        }
+      }
+      for (let j = 0; j < dy; j++) {
+        if (M_y[t][j] < 1 || M_y[t][j] > Ny) {
+          return { err: `Generated y${j+1}(${t})=${M_y[t][j]} out of range [1,${Ny}]. Adjust y₁(${t}) or aᵧ.` };
+        }
+      }
+      
+      // Check strictly increasing
+      for (let i = 1; i < dx; i++) {
+        if (M_x[t][i] <= M_x[t][i-1]) {
+          return { err: `Generated x-coords at t=${t} not strictly increasing. Increase aₓ (currently ${ax}).` };
+        }
+      }
+      for (let j = 1; j < dy; j++) {
+        if (M_y[t][j] <= M_y[t][j-1]) {
+          return { err: `Generated y-coords at t=${t} not strictly increasing. Increase aᵧ (currently ${ay}).` };
+        }
+      }
     }
-    // Validate strictly increasing
-    for (let i = 1; i < dx; i++)
-      if (xs[i] <= xs[i-1]) return { err: `M[${t}]: x-coordinates must be strictly increasing (x${i+1} ≤ x${i})` };
-    for (let j = 1; j < dy; j++)
-      if (ys[j] <= ys[j-1]) return { err: `M[${t}]: y-coordinates must be strictly increasing (y${j+1} ≤ y${j})` };
+    
+  } else {
+    // Parse original mode motion matrix
+    const rows = $('motion-matrix').tBodies[0].rows;
+    if (rows.length !== T + 1) return { err: 'Motion matrix row count mismatch. Rebuild inputs.' };
 
-    M_x.push(xs);
-    M_y.push(ys);
+    M_x = []; // M_x[t][i] = x-coord of column i at time t (1-indexed lattice)
+    M_y = []; // M_y[t][j] = y-coord of row j at time t
+
+    for (let t = 0; t <= T; t++) {
+      const inputs = rows[t].querySelectorAll('input');
+      if (inputs.length !== dx + dy) return { err: `Matrix row t=${t} has wrong number of inputs.` };
+      const xs = [], ys = [];
+      for (let i = 0; i < dx; i++) {
+        const v = parseInt(inputs[i].value);
+        if (isNaN(v) || v < 1 || v > Nx) return { err: `M[${t}][x${i+1}]=${v} out of range [1,${Nx}]` };
+        xs.push(v);
+      }
+      for (let j = 0; j < dy; j++) {
+        const v = parseInt(inputs[dx + j].value);
+        if (isNaN(v) || v < 1 || v > Ny) return { err: `M[${t}][y${j+1}]=${v} out of range [1,${Ny}]` };
+        ys.push(v);
+      }
+      // Validate strictly increasing
+      for (let i = 1; i < dx; i++)
+        if (xs[i] <= xs[i-1]) return { err: `M[${t}]: x-coordinates must be strictly increasing (x${i+1} ≤ x${i})` };
+      for (let j = 1; j < dy; j++)
+        if (ys[j] <= ys[j-1]) return { err: `M[${t}]: y-coordinates must be strictly increasing (y${j+1} ≤ y${j})` };
+
+      M_x.push(xs);
+      M_y.push(ys);
+    }
   }
 
   const osInit = getOccupationMatrix();
@@ -893,3 +990,122 @@ window.addEventListener('DOMContentLoaded', () => {
   setStatus('Welcome! Adjust parameters and click Initialize.', '');
   setPhase('idle');
 });
+
+// =============================================================================
+// MODE TOGGLE & QN INPUT
+// =============================================================================
+
+function toggleInputMode() {
+  inputMode = (inputMode === 'original') ? 'qn' : 'original';
+  $('mode-label').textContent = inputMode === 'original' ? 'Original' : 'QN';
+  updateInputPanelForMode();
+}
+
+function updateInputPanelForMode() {
+  const matrixSection = document.querySelector('#input-panel > div:nth-child(3)');
+  if (inputMode === 'original') {
+    // Show motion matrix
+    matrixSection.style.display = '';
+    const qnSection = $('qn-input-section');
+    if (qnSection) qnSection.style.display = 'none';
+  } else {
+    // Show QN inputs
+    matrixSection.style.display = 'none';
+    let qnSection = $('qn-input-section');
+    if (!qnSection) {
+      qnSection = createQNInputSection();
+      matrixSection.parentNode.insertBefore(qnSection, matrixSection.nextSibling);
+    }
+    qnSection.style.display = '';
+    buildQNInputs();
+  }
+}
+
+function createQNInputSection() {
+  const section = document.createElement('div');
+  section.id = 'qn-input-section';
+  section.innerHTML = `
+    <div class="section-title">QN Mode: Simplified Motion Input</div>
+    <div style="margin-bottom: 12px;">
+      <div class="param-grid" style="margin-bottom: 8px;">
+        <div class="param-item">
+          <label>a<sub>x</sub> (x-spacing)</label>
+          <input type="number" id="qn-ax" value="1" min="1" max="5" step="1">
+        </div>
+        <div class="param-item">
+          <label>a<sub>y</sub> (y-spacing)</label>
+          <input type="number" id="qn-ay" value="1" min="1" max="5" step="1">
+        </div>
+      </div>
+      <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 8px;">
+        Uniform spacing: x<sub>n</sub>(t) = x<sub>1</sub>(t) + (n−1)×a<sub>x</sub>
+      </div>
+    </div>
+    <div id="qn-matrix-wrapper" style="overflow: auto;">
+      <table id="qn-motion-table" style="border-collapse: collapse; font-size: 0.8rem;"></table>
+    </div>
+    <div style="margin-top:6px; font-size:0.75rem; color:#94a3b8;">
+      Enter x<sub>1</sub>(t) and y<sub>1</sub>(t) for each time step. Other positions computed automatically.
+    </div>
+  `;
+  return section;
+}
+
+function buildQNInputs() {
+  const T  = parseInt($('param-T').value);
+  const Nx = parseInt($('param-Nx').value);
+  const Ny = parseInt($('param-Ny').value);
+  
+  const table = $('qn-motion-table');
+  if (!table) return;
+  
+  table.innerHTML = '';
+  
+  // Header row
+  const thead = table.createTHead();
+  const hrow = thead.insertRow();
+  hrow.innerHTML = `
+    <th style="background: #f1f5f9; font-size: 0.7rem; color: #475569; padding: 4px 6px;">t</th>
+    <th class="x-header" style="background: #ede9fe; color: #4f46e5; font-size: 0.7rem; padding: 4px 6px;">x<sub>1</sub>(t)</th>
+    <th class="y-header" style="background: #fef3c7; color: #92400e; font-size: 0.7rem; padding: 4px 6px;">y<sub>1</sub>(t)</th>
+  `;
+  
+  // Body rows: t = 0 .. T
+  const tbody = table.createTBody();
+  for (let t = 0; t <= T; t++) {
+    const row = tbody.insertRow();
+    
+    // Time label
+    const labelCell = row.insertCell();
+    labelCell.style.cssText = 'background: #f8fafc; color: #64748b; font-size: 0.7rem; padding: 2px 6px; border: 1px solid #e2e8f0;';
+    labelCell.textContent = `t=${t}`;
+    
+    // x1 input
+    const x1Cell = row.insertCell();
+    x1Cell.style.cssText = 'background: #f5f3ff; border: 1px solid #e2e8f0; padding: 2px;';
+    const x1Input = document.createElement('input');
+    x1Input.type = 'number';
+    x1Input.min = 1;
+    x1Input.max = Nx;
+    x1Input.step = 1;
+    x1Input.value = 1;
+    x1Input.style.cssText = 'width: 50px; border: none; background: transparent; text-align: center; font-size: 0.85rem; padding: 2px;';
+    x1Input.onfocus = function() { this.style.outline = '1px solid #6366f1'; this.style.borderRadius = '3px'; this.style.background = '#eef2ff'; };
+    x1Input.onblur = function() { this.style.outline = ''; this.style.background = 'transparent'; };
+    x1Cell.appendChild(x1Input);
+    
+    // y1 input
+    const y1Cell = row.insertCell();
+    y1Cell.style.cssText = 'background: #fffbeb; border: 1px solid #e2e8f0; padding: 2px;';
+    const y1Input = document.createElement('input');
+    y1Input.type = 'number';
+    y1Input.min = 1;
+    y1Input.max = Ny;
+    y1Input.step = 1;
+    y1Input.value = 1;
+    y1Input.style.cssText = 'width: 50px; border: none; background: transparent; text-align: center; font-size: 0.85rem; padding: 2px;';
+    y1Input.onfocus = function() { this.style.outline = '1px solid #6366f1'; this.style.borderRadius = '3px'; this.style.background = '#eef2ff'; };
+    y1Input.onblur = function() { this.style.outline = ''; this.style.background = 'transparent'; };
+    y1Cell.appendChild(y1Input);
+  }
+}
